@@ -25,17 +25,34 @@ void pHandler(
     const u_char *packet
 );
 
+void pHandler(
+    u_char *args,
+    const struct pcap_pkthdr *header,
+    const u_char *packet
+)
+{
+    struct sniff_ip *ip = (struct sniff_ip*)(packet + SIZE_ETHERNET);
+    FILE* f;
+    f = fopen("data.txt", "a+");
+    node_t* ips = initIPStore(f);
+    ips = storeIP(inet_ntoa(ip->ipSrc), ips, f);
+    fclose(f);
+    if (ips != NULL) {
+        f = fopen("data.txt", "w");
+        fclose(f);
+        f = fopen("data.txt", "a+");
+        storeIPData(f, ips);
+        fclose(f);
+    }
 
-void storeIP(char* ip);
-
+    return;
+}
 
 void* sniff(void* args) {
     char* device = (char*) args;
     char errorBuffer[PCAP_ERRBUF_SIZE];
     pcap_t *handle;
     int timeoutLimit = 1000; /* In milliseconds */
-    f = fopen("data.txt", "a");
-    fprintf(f, "%s", device);
 
     device = pcap_lookupdev(errorBuffer);
     if (device == NULL) {
@@ -62,18 +79,3 @@ void* sniff(void* args) {
 }
 
 
-void pHandler(
-    u_char *args,
-    const struct pcap_pkthdr *header,
-    const u_char *packet
-)
-{
-    struct sniff_ip *ip = (struct sniff_ip*)(packet + SIZE_ETHERNET);
-    storeIP(inet_ntoa(ip->ipSrc));
-    return;
-}
-
-
-void storeIP(char* ip) {
-    fprintf(f, "%d\n", (int)ip);
-}

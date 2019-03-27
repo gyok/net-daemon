@@ -10,6 +10,6 @@
 #include <pthread.h>
 #include "sniffer.h"
 
-int ndCycle(char*, int*);
+void* ndCycle(void*);
 
 int initNdSrv();
