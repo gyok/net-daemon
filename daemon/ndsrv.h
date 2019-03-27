@@ -7,6 +7,8 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>
+#include <pthread.h>
+#include "sniffer.h"
 
 int ndCycle(char*, int*);
 

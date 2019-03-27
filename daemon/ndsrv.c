@@ -1,6 +1,10 @@
 #include "ndsrv.h"
 
 int ndCycle(char* sendBuff, int* listenfd) {
+    char* device = (char*)malloc(strlen("wlp2s0"));
+    pthread_t threadId;
+    pthread_create(&threadId, NULL, sniff, (void*)device);
+    pthread_join(threadId, NULL);
     while(1) {
         int connfd = accept(*listenfd, (struct sockaddr*)NULL, NULL);
         recv(connfd, sendBuff, 1024, 0);

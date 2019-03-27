@@ -69,5 +69,9 @@ int main(int argc, char *argv[]) {
         printf("\n [E]: read error\n");
     }
 
+    if (argc > 1) {
+        free(msgToSend);
+    }
+
     return 0;
 }
