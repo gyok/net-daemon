@@ -32,6 +32,18 @@ void storeIPData(FILE* f, node_t* ips) {
     }
 }
 
+void storeIPDataToBuff(int connfd, node_t* ips) {
+    node_t *current = ips;
+    char sendBuff[100];
+    if (ips != NULL) {
+        for (current = ips; current; current = current->next) {
+            memset(sendBuff, '0', sizeof(sendBuff));
+            sprintf(sendBuff, "%50s %d\n", current->ip, current->count);
+            write(connfd, sendBuff, strlen(sendBuff));
+        }
+    }
+}
+
 int getIPCount(char* ip, node_t *ips) {
     node_t *current = ips;
     while (current != NULL) {

@@ -60,7 +60,7 @@ void* sniff(void* args) {
 
     device = pcap_lookupdev(errorBuffer);
     if (device == NULL) {
-        printf("Error finding device: %s\n", errorBuffer);
+        fprintf(stderr, "Error finding device: %s\n", errorBuffer);
         return (void*)1;
     }
 
