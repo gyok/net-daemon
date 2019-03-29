@@ -26,8 +26,12 @@ void* ndCycle(void* args) {
             } else if (strcmp(firstWord, "stop") == 0) {
                 fd = fopen("data.txt", "a");
                 storeIPData(fd, NULL);
+                fprintf(fd, "\nclose");
                 fclose(fd);
                 sprintf(sendBuff, "stop\n");
+                write(connfd, sendBuff, strlen(sendBuff));
+                close(connfd);
+                return (void*)0;
             } else if (strcmp(firstWord, "--help") == 0) {
                 sprintf(sendBuff, "start (packets are being sniffed from now on from default iface(eth0))\n");
             }
@@ -36,25 +40,32 @@ void* ndCycle(void* args) {
         close(connfd);
         //sleep(30);
     }
+    // pthread_exit(0);
 
     return (void*)0;
 }
 
 
 int initNdThreads(char* sendBuff, int* listenfd) {
-    pthread_t threadId, ndCycleThread;
+    pthread_t sniffThread, ndCycleThread;
     struct ndCycleData ndcd;
     ndcd.buff = sendBuff;
     ndcd.fd = listenfd;
     pthread_create(&ndCycleThread, NULL, ndCycle, (void*)&ndcd);
-    pthread_join(ndCycleThread, NULL);
-    ndCycle((void*)&ndcd);
 
     printf("sniff");
     char* device = (char*)malloc(strlen("wlp2s0"));
-    sniff((void*)device);
-    pthread_create(&threadId, NULL, sniff, (void*)device);
-    pthread_join(threadId, NULL);
+    pthread_create(&sniffThread, NULL, sniff, (void*)device);
+    // sniff((void*)device);
+    // pthread_join(threadId, NULL);
+
+    pthread_join(ndCycleThread, NULL);
+    pthread_cancel(sniffThread);
+    FILE* fd = fopen("data.txt", "a+");
+    fprintf(fd, "mango");
+    fclose(fd);
+    pthread_join(sniffThread, NULL);
+    
     return 0;
 }
 

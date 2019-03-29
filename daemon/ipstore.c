@@ -79,5 +79,6 @@ node_t* storeIP(char* ip, node_t* ips, FILE* f) {
     newNode->count = 1;
     strcpy(newNode->ip, ip);
     current->next = newNode;
+    newNode->next = NULL;
     return ips;
 }

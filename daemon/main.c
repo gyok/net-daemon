@@ -3,7 +3,7 @@
 #include "ndsrv.h"
 
 void netDaemon() {
-    daemonize();
+    // daemonize();
     initNdSrv();
 }
 

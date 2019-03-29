@@ -20,13 +20,11 @@ struct sniff_ip {
 };
 
 void pHandler(
-    u_char *args,
     const struct pcap_pkthdr *header,
     const u_char *packet
 );
 
 void pHandler(
-    u_char *args,
     const struct pcap_pkthdr *header,
     const u_char *packet
 )
@@ -49,6 +47,9 @@ void pHandler(
 }
 
 void* sniff(void* args) {
+    FILE* dbg = fopen("dbg.txt", "a+");
+    fprintf(dbg, "sniff");
+    fclose(dbg);
     char* device = (char*) args;
     char errorBuffer[PCAP_ERRBUF_SIZE];
     pcap_t *handle;
@@ -73,7 +74,17 @@ void* sniff(void* args) {
          return (void*)2;
      }
      
-    pcap_loop(handle, 0, pHandler, NULL);
+
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    int res = 0;
+    struct pcap_pkthdr *header;
+    const u_char *packet;
+    while ((res = pcap_next_ex(handle, &header, &packet)) >= 0) {
+        if (res == 0) continue;
+        pHandler(header, packet);
+        pthread_testcancel();
+    }
+    // pcap_loop(handle, 0, pHandler, NULL);
 
     return (void*)0;
 }
