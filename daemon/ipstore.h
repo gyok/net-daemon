@@ -9,7 +9,7 @@ typedef struct node {
     struct node *next;
 } node_t;
 
-int getIPCount(char*);
-node_t* storeIP(char*, node_t*, FILE*);
+int getIPCount(char*, node_t*);
+node_t* storeIP(char*, node_t*);
 void storeIPData(FILE*, node_t*);
 node_t* initIPStore(FILE*);

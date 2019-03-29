@@ -12,4 +12,12 @@
 
 #define SIZE_ETHERNET 14
 
+struct ndData {
+    char* buff;
+    char* device;
+    int* fd;
+    pthread_mutex_t mutex;
+    node_t* ips;
+};
+
 void* sniff(void*);

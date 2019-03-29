@@ -19,38 +19,41 @@ struct sniff_ip {
         struct in_addr ipDst; /* source and dest address */
 };
 
-void pHandler(
-    const struct pcap_pkthdr *header,
-    const u_char *packet
-);
 
 void pHandler(
-    const struct pcap_pkthdr *header,
-    const u_char *packet
+    const u_char *packet,
+    struct ndData *ndcd
 )
 {
     struct sniff_ip *ip = (struct sniff_ip*)(packet + SIZE_ETHERNET);
-    FILE* f;
+    /*FILE* f;
     f = fopen("data.txt", "a+");
-    node_t* ips = initIPStore(f);
-    ips = storeIP(inet_ntoa(ip->ipSrc), ips, f);
-    fclose(f);
-    if (ips != NULL) {
+    ips = initIPStore(f);
+    fclose(f);*/
+    pthread_mutex_lock(&ndcd->mutex);
+    ndcd->ips = storeIP(inet_ntoa(ip->ipSrc), ndcd->ips);
+    pthread_mutex_unlock(&ndcd->mutex);
+    /*if (ips != NULL) {
         f = fopen("data.txt", "w");
         fclose(f);
         f = fopen("data.txt", "a+");
         storeIPData(f, ips);
         fclose(f);
-    }
+    }*/
 
     return;
 }
 
 void* sniff(void* args) {
-    FILE* dbg = fopen("dbg.txt", "a+");
+    /*FILE* dbg = fopen("dbg.txt", "a+");
     fprintf(dbg, "sniff");
-    fclose(dbg);
-    char* device = (char*) args;
+    fclose(dbg);*/
+
+    struct ndData *ndcd = (struct ndData*)args;
+    pthread_mutex_lock(&(ndcd->mutex));
+    char* device = ndcd->device;
+    pthread_mutex_unlock(&(ndcd->mutex));
+
     char errorBuffer[PCAP_ERRBUF_SIZE];
     pcap_t *handle;
     int timeoutLimit = 1000; /* In milliseconds */
@@ -81,7 +84,7 @@ void* sniff(void* args) {
     const u_char *packet;
     while ((res = pcap_next_ex(handle, &header, &packet)) >= 0) {
         if (res == 0) continue;
-        pHandler(header, packet);
+        pHandler(packet, ndcd);
         pthread_testcancel();
     }
     // pcap_loop(handle, 0, pHandler, NULL);

@@ -1,13 +1,15 @@
 #include "ndsrv.h"
 
-struct ndCycleData {
-    char* buff;
-    int* fd;
-};
+
+struct threadData {
+    pthread_mutex_t mutex;
+    node_t* ips;
+}; 
 
 void* ndCycle(void* args) {
-    char* sendBuff = ((struct ndCycleData*)args)->buff;
-    int* listenfd = ((struct ndCycleData*)args)->fd;
+    struct ndData *ndcd = (struct ndData*)args;
+    char* sendBuff = ndcd->buff;
+    int* listenfd = ndcd->fd;
     char* firstWord;
     char* ip;
     char* thirdWord;
@@ -21,14 +23,18 @@ void* ndCycle(void* args) {
                 ip = strtok(NULL, " ");
                 thirdWord = strtok(NULL, " ");
                 if (strcmp(thirdWord, "count") == 0) {
-                    sprintf(sendBuff, "count: %d", getIPCount(ip));
+                    pthread_mutex_lock(&ndcd->mutex);
+                    sprintf(sendBuff, "%d\n", getIPCount(ip, ndcd->ips));
+                    pthread_mutex_unlock(&ndcd->mutex);
                 }
             } else if (strcmp(firstWord, "stop") == 0) {
-                fd = fopen("data.txt", "a");
-                storeIPData(fd, NULL);
-                fprintf(fd, "\nclose");
+                fd = fopen("data.txt", "w");
+                pthread_mutex_lock(&ndcd->mutex);
+                storeIPData(fd, ndcd->ips);
+                pthread_mutex_unlock(&ndcd->mutex);
+                fprintf(fd, "\nclose\n");
                 fclose(fd);
-                sprintf(sendBuff, "stop\n");
+                sprintf(sendBuff, "bye\n");
                 write(connfd, sendBuff, strlen(sendBuff));
                 close(connfd);
                 return (void*)0;
@@ -48,23 +54,23 @@ void* ndCycle(void* args) {
 
 int initNdThreads(char* sendBuff, int* listenfd) {
     pthread_t sniffThread, ndCycleThread;
-    struct ndCycleData ndcd;
+
+    struct ndData ndcd;
+    ndcd.device = (char*)malloc(strlen("wlp2s0"));
     ndcd.buff = sendBuff;
     ndcd.fd = listenfd;
-    pthread_create(&ndCycleThread, NULL, ndCycle, (void*)&ndcd);
+    ndcd.ips = NULL;
+    pthread_mutex_init(&(ndcd.mutex), NULL);
 
-    printf("sniff");
-    char* device = (char*)malloc(strlen("wlp2s0"));
-    pthread_create(&sniffThread, NULL, sniff, (void*)device);
-    // sniff((void*)device);
-    // pthread_join(threadId, NULL);
+    pthread_create(&ndCycleThread, NULL, ndCycle, &ndcd);
+    pthread_create(&sniffThread, NULL, sniff, &ndcd);
 
     pthread_join(ndCycleThread, NULL);
+
     pthread_cancel(sniffThread);
-    FILE* fd = fopen("data.txt", "a+");
-    fprintf(fd, "mango");
-    fclose(fd);
     pthread_join(sniffThread, NULL);
+
+    pthread_mutex_destroy(&(ndcd.mutex));
     
     return 0;
 }

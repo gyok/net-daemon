@@ -32,8 +32,8 @@ void storeIPData(FILE* f, node_t* ips) {
     }
 }
 
-int getIPCount(char* ip) {
-    node_t *current = NULL;
+int getIPCount(char* ip, node_t *ips) {
+    node_t *current = ips;
     while (current != NULL) {
         if (strcmp(current->ip, ip) == 0) {
             return current->count;
@@ -44,13 +44,19 @@ int getIPCount(char* ip) {
     return 0;
 }
 
-node_t* storeIP(char* ip, node_t* ips, FILE* f) {
+void mdbg(char* str) {
+        FILE* f = fopen("dbg.txt", "a+");
+        fprintf(f, "\n%50s\n", str);
+        fclose(f);
+}
+
+node_t* storeIP(char* ip, node_t* ips) {
     node_t* current = ips;
 
-    node_t* newNode = malloc(sizeof(node_t));
-    newNode->ip = malloc(sizeof(char) * 50);
     // empty list
     if (current == NULL) {
+        node_t* newNode = malloc(sizeof(node_t));
+        newNode->ip = malloc(sizeof(char) * 50);
         newNode->count = 1;
         strcpy(newNode->ip, ip);
         newNode->next = NULL;
@@ -59,13 +65,15 @@ node_t* storeIP(char* ip, node_t* ips, FILE* f) {
     }
 
     int compareRes;
-    while (current->next != NULL) {
+    while (current != NULL) {
         compareRes = strcmp(current->ip, ip);
         if (compareRes == 0) {
             current->count++;
             return ips;
         }
         if (compareRes > 0) {
+            node_t* newNode = malloc(sizeof(node_t));
+            newNode->ip = malloc(sizeof(char) * 50);
             newNode->next = current->next;
             strcpy(newNode->ip, current->ip);
             newNode->count = current->count;
@@ -76,9 +84,11 @@ node_t* storeIP(char* ip, node_t* ips, FILE* f) {
         }
         current = current->next;
     }
-    newNode->count = 1;
-    strcpy(newNode->ip, ip);
-    current->next = newNode;
-    newNode->next = NULL;
+    current = malloc(sizeof(node_t));
+    current->ip = malloc(sizeof(char) * 50);
+    current->count = 1;
+    strcpy(current->ip, ip);
+    current->next = NULL;
+
     return ips;
 }
