@@ -10,9 +10,15 @@ typedef struct node {
     struct node *next;
 } node_t;
 
+typedef struct deviceStat {
+    char* device;
+    node_t *ips;
+    struct deviceStat *next;
+} dStat;
+
 void mdbg(char*);
 int getIPCount(char*, node_t*);
 node_t* storeIP(char*, node_t*);
-void storeIPData(FILE*, node_t*);
+void storeIPData(FILE*, dStat*);
 void storeIPDataToBuff(int, node_t*);
 node_t* initIPStore(FILE*);

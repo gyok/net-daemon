@@ -31,7 +31,7 @@ void pHandler(
     ips = initIPStore(f);
     fclose(f);*/
     pthread_mutex_lock(&ndcd->mutex);
-    ndcd->ips = storeIP(inet_ntoa(ip->ipSrc), ndcd->ips);
+    ndcd->ds->ips = storeIP(inet_ntoa(ip->ipSrc), ndcd->ds->ips);
     pthread_mutex_unlock(&ndcd->mutex);
     /*if (ips != NULL) {
         f = fopen("data.txt", "w");
@@ -58,7 +58,7 @@ void* sniff(void* args) {
     pcap_t *handle;
     int timeoutLimit = 1000; /* In milliseconds */
 
-    device = pcap_lookupdev(errorBuffer);
+    // device = pcap_lookupdev(errorBuffer);
     if (device == NULL) {
         fprintf(stderr, "Error finding device: %s\n", errorBuffer);
         return (void*)1;

@@ -1,10 +1,13 @@
 #include "ipstore.h"
 
-node_t* initIPStore(FILE* f) {
+node_t* initIPStore(FILE* f/*, char* device*/) {
     node_t *head, *current;
     head = current = NULL;
     char* ip = malloc(sizeof(char) * 50);;
     int count = 0;
+    //char row[70];
+    //while (fscanf(f, "=%50s", device) != EOF) {
+    //}
 
     while (fscanf(f, "%50s %d", ip, &count) != EOF) {
         node_t* newNode = malloc(sizeof(node_t));
@@ -23,12 +26,15 @@ node_t* initIPStore(FILE* f) {
 }
 
 
-void storeIPData(FILE* f, node_t* ips) {
-    node_t *current = ips;
-    if (ips != NULL) {
-        for (current = ips; current; current = current->next) {
+void storeIPData(FILE* f, dStat* ds) {
+    dStat *currentDevice;
+    node_t *current;
+    for (currentDevice = ds; currentDevice; currentDevice = currentDevice->next) {
+        fprintf(f, "+%30s\n", currentDevice->device);
+        for (current = currentDevice->ips; current; current = current->next) {
             fprintf(f, "%50s %d\n", current->ip, current->count);
         }
+        fprintf(f, "-%30s\n", currentDevice->device);
     }
 }
 
@@ -58,7 +64,7 @@ int getIPCount(char* ip, node_t *ips) {
 
 void mdbg(char* str) {
         FILE* f = fopen("dbg.txt", "a+");
-        fprintf(f, "\n%50s\n", str);
+        fprintf(f, "\n%s\n", str);
         fclose(f);
 }
 

@@ -24,7 +24,7 @@ void* ndCycle(void* args) {
             } else if (strcmp(firstWord, "stop") == 0) {
                 fd = fopen("data.txt", "w");
                 pthread_mutex_lock(&ndcd->mutex);
-                storeIPData(fd, ndcd->ips);
+                storeIPData(fd, ndcd->ds);
                 pthread_mutex_unlock(&ndcd->mutex);
                 fprintf(fd, "\nclose\n");
                 fclose(fd);
@@ -42,12 +42,18 @@ void* ndCycle(void* args) {
                 thirdWord = strtok(NULL, " ");
                 if (strcmp(thirdWord, "count") == 0) {
                     pthread_mutex_lock(&ndcd->mutex);
-                    sprintf(sendBuff, "%d\n", getIPCount(ip, ndcd->ips));
+                    if (ndcd->ds != NULL) {
+                        sprintf(sendBuff, "%d\n", getIPCount(ip, ndcd->ds->ips));
+                    } else {
+                        sprintf(sendBuff, "%d\n", 0);
+                    }
                     pthread_mutex_unlock(&ndcd->mutex);
                 }
             } else if (strcmp(firstWord, "stat") == 0) {
                     pthread_mutex_lock(&ndcd->mutex);
-                    storeIPDataToBuff(connfd, ndcd->ips);
+                    if (ndcd->ds != NULL) {
+                        storeIPDataToBuff(connfd, ndcd->ds->ips);
+                    }
                     pthread_mutex_unlock(&ndcd->mutex);
             } else if (strcmp(firstWord, "--help") == 0) {
                 sprintf(sendBuff, "start (packets are being sniffed from now on from default iface(eth0))\n");
@@ -67,10 +73,11 @@ int initNdThreads(char* sendBuff, int* listenfd) {
     pthread_t ndCycleThread;
 
     struct ndData ndcd;
-    ndcd.device = (char*)malloc(strlen("wlp2s0"));
+    ndcd.device = (char*)malloc(30);
+    strcpy(ndcd.device, "wlp2s0");
     ndcd.buff = sendBuff;
     ndcd.fd = listenfd;
-    ndcd.ips = NULL;
+    ndcd.ds = NULL;
     pthread_mutex_init(&(ndcd.mutex), NULL);
 
     pthread_create(&ndCycleThread, NULL, ndCycle, &ndcd);
